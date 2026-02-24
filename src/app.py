@@ -62,6 +62,71 @@ def signup_for_activity(activity_name: str, email: str):
     # Get the specific activity
     activity = activities[activity_name]
 
+    # Check if student is already signed up    
+    if email in activity["participants"]:
+        raise HTTPException(status_code=400, detail="Student already signed up for this activity")
+
+    # Check if activity is full
+    if len(activity["participants"]) >= activity["max_participants"]:
+        raise HTTPException(status_code=400, detail="Activity is full")
+        return {"message": f"Successfully signed up {email} for {activity_name}"}
+
+
+    # Add these new activities to the dictionary
+    activities.update({
+        "Basketball": {
+            "description": "Team sport and basketball skills development",
+            "schedule": "Mondays and Wednesdays, 4:00 PM - 5:30 PM",
+            "max_participants": 15,
+            "participants": []
+        },
+        "Tennis": {
+            "description": "Tennis techniques and competitive matches",
+            "schedule": "Tuesdays and Thursdays, 4:00 PM - 5:30 PM",
+            "max_participants": 10,
+            "participants": []
+        },
+        "Art Club": {
+            "description": "Drawing, painting, and visual arts exploration",
+            "schedule": "Wednesdays, 3:30 PM - 5:00 PM",
+            "max_participants": 15,
+            "participants": []
+        },
+        "Drama Club": {
+            "description": "Theater, acting, and stage performance",
+            "schedule": "Thursdays, 3:30 PM - 5:30 PM",
+            "max_participants": 20,
+            "participants": []
+        },
+        "Debate Club": {
+            "description": "Develop argumentation and public speaking skills",
+            "schedule": "Mondays, 3:30 PM - 5:00 PM",
+            "max_participants": 12,
+            "participants": []
+        },
+        "Math Club": {
+            "description": "Advanced mathematics and problem-solving competitions",
+            "schedule": "Fridays, 3:30 PM - 4:30 PM",
+            "max_participants": 18,
+            "participants": []
+        }
+    })
+    
     # Add student
     activity["participants"].append(email)
     return {"message": f"Signed up {email} for {activity_name}"}
+
+
+@app.delete("/activities/{activity_name}/signup")
+def remove_participant(activity_name: str, email: str):
+    """Unregister a student from an activity"""
+    if activity_name not in activities:
+        raise HTTPException(status_code=404, detail="Activity not found")
+
+    activity = activities[activity_name]
+
+    if email not in activity["participants"]:
+        raise HTTPException(status_code=404, detail="Participant not found in activity")
+
+    activity["participants"].remove(email)
+    return {"message": f"Removed {email} from {activity_name}"}
