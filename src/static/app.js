@@ -25,6 +25,14 @@ document.addEventListener("DOMContentLoaded", () => {
           <p>${details.description}</p>
           <p><strong>Schedule:</strong> ${details.schedule}</p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
+          <p><strong>Participants:</strong></p>
+          <ul class="participants-list">
+            ${details.participants.map(p => `
+              <li>
+                ${p} <span class="delete-icon" data-activity="${name}" data-email="${p}" title="Remove">✖</span>
+              </li>
+            `).join("")}
+          </ul>
         `;
 
         activitiesList.appendChild(activityCard);
@@ -62,6 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
         messageDiv.textContent = result.message;
         messageDiv.className = "success";
         signupForm.reset();
+        fetchActivities(); // update the UI immediately
       } else {
         messageDiv.textContent = result.detail || "An error occurred";
         messageDiv.className = "error";
@@ -78,6 +87,28 @@ document.addEventListener("DOMContentLoaded", () => {
       messageDiv.className = "error";
       messageDiv.classList.remove("hidden");
       console.error("Error signing up:", error);
+    }
+  });
+
+  // Handle delete icon clicks via delegation
+  activitiesList.addEventListener("click", async (event) => {
+    if (event.target.classList.contains("delete-icon")) {
+      const activity = event.target.dataset.activity;
+      const email = event.target.dataset.email;
+      try {
+        const res = await fetch(
+          `/activities/${encodeURIComponent(activity)}/signup?email=${encodeURIComponent(email)}`,
+          { method: "DELETE" }
+        );
+        const result = await res.json();
+        if (res.ok) {
+          fetchActivities(); // refresh the list
+        } else {
+          console.error("Unregister failed:", result);
+        }
+      } catch (err) {
+        console.error("Error unregistering:", err);
+      }
     }
   });
 
